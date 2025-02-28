@@ -53,7 +53,7 @@ class Instrument(ABC):
         be a list of values of the ``datatype`` type.
         """
 
-class InstrumentVXI11(Instrument):
+class InstrumentVxi11(Instrument):
     """VXI-11 compatible instrument through a TCP/IP socket."""
 
     def __init__(self, ip_address):
@@ -94,7 +94,7 @@ class InstrumentVXI11(Instrument):
         full_command = command.encode() + b"#" + L + N + B
         self.inst.write_raw(full_command)
 
-class InstrumentSocketASCII(Instrument):
+class InstrumentSocketAscii(Instrument):
     """Raw socket access through a TCP/IP connection. For most purposes,
     InstrumentVXI11 should be used instead.
     """
@@ -171,7 +171,7 @@ class InstrumentSerial(Instrument):
     def write_binary_values(self, command, data, datatype="B"):
         raise NotImplementedError("Binary write not implemented yet.")
 
-class InstrumentVISA(Instrument):
+class InstrumentVisa(Instrument):
     """Instrument using pyvisa. NOTE: This requires NI-VISA to be installed:
     https://www.ni.com/da-dk/support/downloads/drivers/download.ni-visa.html#409839
     """
