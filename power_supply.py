@@ -1,6 +1,7 @@
-from ipaddress import ip_address
 import re
+import time
 from abc import ABC, abstractmethod
+import serial
 
 from . import InstrumentSerial
 
@@ -137,49 +138,77 @@ class Channel(PowerSupply):
         return self.psu.measure_power_W()
 
 class KoradKA3005PS(PowerSupply):
-    """Korad KA3005PS power supply."""
+    """Korad KA3005PS power supply.
+    Inspired by https://github.com/starforgelabs/py-korad-serial/
+    """
 
-    IDN_SUBSTRING = "KA3005"
+    IDN_SUBSTRING = "KA3005PS"
 
-    def __init__(self, serial_port="", phy=None):
-        self.phy = phy
-        if self.phy is None:
-            self.phy = InstrumentSerial(ip_address)
+    def __init__(self, serial_port):
+        self.ser = serial.Serial(
+            serial_port,
+            baudrate=115200,
+            bytesize=serial.EIGHTBITS,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            timeout=1,
+        )
 
         idn = self.get_id()
         if not self.IDN_SUBSTRING in idn:
             raise ValueError(f"Invalid instrument ID: '{idn}'")
 
     def get_id(self):
-        return self.phy.query("*IDN?")
+        return self._query("*IDN?")
 
     def reset(self):
-        self.phy.write("*RST")
+        pass
 
     def close(self):
-        self.phy.close()
+        self.ser.close()
 
     def set_channel(self, channel):
         pass
 
     def set_output_enable(self):
-        pass
+        self._write("OUT1")
 
     def set_output_disable(self):
-        pass
+        self._write("OUT0")
 
     def set_voltage_V(self, value):
-        pass
+        self._write(f"VSET1:{value:05.2f}") 
 
     def set_current_limit_A(self, value):
+        self._write(f"ISET1:{value:05.3f}") 
         pass
 
     def measure_voltage_V(self):
-        return 0.0
+        return float(self._query("VOUT1?", fixed_length=5))
 
     def measure_current_A(self):
-        return 0.0
+        return float(self._query("IOUT1?", fixed_length=5))
 
     def measure_power_W(self):
-        return 0.0
+        return self.measure_voltage_V() * self.measure_current_A()
+
+    def _write(self, command):
+        self.ser.reset_input_buffer()
+        self.ser.reset_output_buffer()
+        time.sleep(0.1)
+        self.ser.write(command.encode("ascii"))
+
+    def _read(self, fixed_length=None):
+        result = []
+        c = self.ser.read(1).decode("ascii")
+        while len(c) > 0 and ord(c) != 0:
+            result.append(c)
+            if fixed_length is not None and len(result) == fixed_length:
+                break
+            c = self.ser.read(1).decode("ascii")
+        return ''.join(result)
+
+    def _query(self, command, fixed_length=None):
+        self._write(command)
+        return self._read(fixed_length)
 
