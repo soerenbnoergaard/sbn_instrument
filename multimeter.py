@@ -1,4 +1,3 @@
-import re
 from abc import ABC, abstractmethod
 import serial
 
@@ -16,32 +15,42 @@ class Multimeter(ABC):
         """Close the connection to the instrument."""
 
     @abstractmethod
-    def measure_voltage_dc_V(self):
-        """Measure a DC voltage in volts."""
+    def set_mode_voltage_dc_V(self):
+        """Set the instrument to DC voltage mode (V)."""
 
     @abstractmethod
-    def measure_voltage_ac_V(self):
-        """Measure an AC voltage in volts."""
+    def set_mode_voltage_ac_V(self):
+        """Set the instrument to AC voltage mode (V)."""
 
     @abstractmethod
-    def measure_current_dc_A(self):
-        """Measure a DC current in ampere."""
+    def set_mode_current_dc_A(self):
+        """Set the instrument to DC current mode (A)."""
 
     @abstractmethod
-    def measure_current_ac_A(self):
-        """Measure an AC current in ampere."""
+    def set_mode_current_ac_A(self):
+        """Set the instrument to AC current mode (A)."""
 
     @abstractmethod
-    def measure_resistance_ohm(self):
-        """Measure resistance in ohm."""
+    def set_mode_resistance_ohm(self):
+        """Set the instrument to resistance mode (ohm)."""
 
     @abstractmethod
-    def measure_frequency_Hz(self):
-        """Measure frequency in hertz."""
+    def set_mode_frequency_Hz(self):
+        """Set the instrument to frequency mode (Hz)."""
 
     @abstractmethod
-    def measure_temperature_C(self):
-        """Measure temperature in degrees Celsius."""
+    def set_mode_temperature_C(self):
+        """Set the instrument to temperature mode (degrees Celsius)."""
+
+    @abstractmethod
+    def measure(self):
+        """Return a measurement value for the selected mode."""
+
+    @abstractmethod
+    def measure_dual(self):
+        """Return a measurement 2-tuple of values for the selected mode (for
+        dual-display multimeters).
+        """
 
 class Dummy(Multimeter):
     """Dummy multimeter for simulation use."""
@@ -55,26 +64,32 @@ class Dummy(Multimeter):
     def close(self):
         pass
 
-    def measure_voltage_dc_V(self):
-        return 0
+    def set_mode_voltage_dc_V(self):
+        pass
 
-    def measure_voltage_ac_V(self):
-        return 0
+    def set_mode_voltage_ac_V(self):
+        pass
 
-    def measure_current_dc_A(self):
-        return 0
+    def set_mode_current_dc_A(self):
+        pass
 
-    def measure_current_ac_A(self):
-        return 0
+    def set_mode_current_ac_A(self):
+        pass
 
-    def measure_resistance_ohm(self):
-        return 0
+    def set_mode_resistance_ohm(self):
+        pass
 
-    def measure_frequency_Hz(self):
-        return 0
+    def set_mode_frequency_Hz(self):
+        pass
 
-    def measure_temperature_C(self):
-        return 0
+    def set_mode_temperature_C(self):
+        pass
+
+    def measure(self):
+        return 0.0
+
+    def measure_dual(self):
+        return 0.0, 0.0
 
 class BrymenBm257s(Multimeter):
     """Brymen BM257s multimeter.
@@ -125,64 +140,40 @@ class BrymenBm257s(Multimeter):
     def close(self):
         self.ser.close()
 
-    def measure_voltage_dc_V(self):
-        s = self._get_display()
-        m = re.search(r"([-\.\d]+)V", s)
-        if m is not None:
-            return float(m[1])
-        m = re.search(r"([-\.\d]+)mV", s)
-        if m is not None:
-            return float(m[1]) * 1e-3
+    def set_mode_voltage_dc_V(self):
+        """Mode must be selected manually for this instrument."""
+        pass
 
-    def measure_voltage_ac_V(self):
-        return self.measure_voltage_dc_V()
+    def set_mode_voltage_ac_V(self):
+        """Mode must be selected manually for this instrument."""
+        pass
 
-    def measure_current_dc_A(self):
-        s = self._get_display()
-        m = re.search(r"([-\.\d]+)A", s)
-        if m is not None:
-            return float(m[1])
-        m = re.search(r"([-\.\d]+)mA", s)
-        if m is not None:
-            return float(m[1]) * 1e-3
-        m = re.search(r"([-\.\d]+)uA", s)
-        if m is not None:
-            return float(m[1]) * 1e-6
+    def set_mode_current_dc_A(self):
+        """Mode must be selected manually for this instrument."""
+        pass
 
-    def measure_current_ac_A(self):
-        return self.measure_current_dc_A()
+    def set_mode_current_ac_A(self):
+        """Mode must be selected manually for this instrument."""
+        pass
 
-    def measure_resistance_ohm(self):
-        s = self._get_display()
-        m = re.search(r"([-\.\d]+)Ohm", s)
-        if m is not None:
-            return float(m[1])
-        m = re.search(r"([-\.\d]+)kOhm", s)
-        if m is not None:
-            return float(m[1]) * 1e3
-        m = re.search(r"([-\.\d]+)MOhm", s)
-        if m is not None:
-            return float(m[1]) * 1e6
+    def set_mode_resistance_ohm(self):
+        """Mode must be selected manually for this instrument."""
+        pass
 
-    def measure_frequency_Hz(self):
-        s = self._get_display()
-        m = re.search(r"([-\.\d]+)Hz", s)
-        if m is not None:
-            return float(m[1])
-        m = re.search(r"([-\.\d]+)kHz", s)
-        if m is not None:
-            return float(m[1]) * 1e3
-        m = re.search(r"([-\.\d]+)MHz", s)
-        if m is not None:
-            return float(m[1]) * 1e6
+    def set_mode_frequency_Hz(self):
+        """Mode must be selected manually for this instrument."""
+        pass
 
-    def measure_temperature_C(self):
-        s = self._get_display()
-        if "---" in s:
-            return -273.15
-        m = re.search(r"([-\.\d]+)C", s)
-        if m is not None:
-            return float(m[1])
+    def set_mode_temperature_C(self):
+        """Mode must be selected manually for this instrument."""
+        pass
+
+    def measure(self):
+        value, unit, flags = self._parse_data(self._read())
+        return value
+
+    def measure_dual(self):
+        return self.measure(), None
 
     def _read(self):
         def read_one_byte():
@@ -191,7 +182,7 @@ class BrymenBm257s(Multimeter):
                 raise ValueError("Serial error: No serial data read")
             return ord(s)
 
-        # Try a few times
+        # Try a few times before giving up.
         for _ in range(10):
             try:
                 self.ser.reset_input_buffer()
@@ -204,24 +195,27 @@ class BrymenBm257s(Multimeter):
                 else:
                     raise ValueError("Serial error: No 0x02 byte found")
 
+                # Read and store all 15 bytes
                 result = [c]
                 for _ in range(14):
                     result.append(read_one_byte())
 
+                # Check that the first nibble of each byte contains the correct index.
                 for n, b in enumerate(result):
                     if (b >> 4) & 0x0f != n:
                         raise ValueError("Serial error: Incorrect byte ordering")
 
                 return result
-            except ValueError as e:
-                pass
-        raise ValueError("Failed to read serial data")
 
-    def _get_display(self):
-        return self._parse_data(self._read())
+            except ValueError:
+                pass
+
+        raise ValueError("Failed to read serial data")
 
     @staticmethod
     def _parse_data(data):
+        """Return 3-tuple: Value, unit, flags."""
+
         # Parse segments
         seven_segment_lut = {
             (1, 1, 1, 1, 1, 1, 0): "0",
@@ -256,12 +250,45 @@ class BrymenBm257s(Multimeter):
         d3 = seven_segment_lut[(b(8,3),  b(9,3),  b(9,1),  b(9,0), b(8,1), b(8,2),  b(9,2))]
         d4 = seven_segment_lut[(b(10,3), b(11,3), b(11,1), b(11,0), b(10,1), b(10,2), b(11,2))]
 
-        # Format string
-        s_elements = [
-            f("-",4,0), d1, f(".",6,0), d2, f(".",8,0), d3, f(".",10,0), d4, # Segments
-            f("M",12,1), f("k",12,0), f("n",13,0), f("m",14,0), f("u",14,1), # Prefix
-            f("dBm",12,2), f("Ohm",13,2), f("F",14,2), f("V",15,2), f("Hz",13,1), f("A",15,1), # Unit
-            # TODO: Optionally add info about MIN, MAX, AUTO, AC, DC, etc.
-        ]
-        s = "".join(s_elements)
-        return s
+        # Extract value and scale it according to the engineering prefixes
+        scale = 1.0
+        if b(12, 1): # M
+            scale = 1e6
+        elif b(12, 0): # k
+            scale = 1e3
+        elif b(14, 0): # m
+            scale = 1e-3
+        elif b(14, 1): # u
+            scale = 1e-6
+        elif b(13, 0): # n
+            scale = 1e-9
+
+        value_string = "".join([f("-",4,0), d1, f(".",6,0), d2, f(".",8,0), d3, f(".",10,0), d4])
+        try:
+            if value_string.endswith("C") or value_string.endswith("F"):
+                value_string = value_string[:-1]
+            value = float(value_string) * scale
+        except ValueError:
+            value = None
+
+        # Extract unit
+        if b(12,2):
+            unit = "dBm"
+        elif b(13,2):
+            unit = "Ohm"
+        elif b(14,2):
+            unit = "F"
+        elif b(15,2):
+            unit = "V"
+        elif b(13,1):
+            unit = "Hz"
+        elif b(15,1):
+            unit = "A"
+        else:
+            unit = None
+
+        # Extract flags
+        # TODO: Optionally add info about MIN, MAX, AUTO, AC, DC, etc.
+        flags = ()
+
+        return value, unit, flags
