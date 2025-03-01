@@ -3,8 +3,6 @@ import time
 from abc import ABC, abstractmethod
 import serial
 
-from . import InstrumentSerial
-
 class PowerSupply(ABC):
     """Common interface for a power supply instrument."""
 
@@ -137,7 +135,7 @@ class Channel(PowerSupply):
         self.psu.set_channel(self.channel)
         return self.psu.measure_power_W()
 
-class KoradKA3005PS(PowerSupply):
+class KoradKa3005Ps(PowerSupply):
     """Korad KA3005PS power supply.
     Inspired by https://github.com/starforgelabs/py-korad-serial/
     """
@@ -211,4 +209,3 @@ class KoradKA3005PS(PowerSupply):
     def _query(self, command, fixed_length=None):
         self._write(command)
         return self._read(fixed_length)
-
