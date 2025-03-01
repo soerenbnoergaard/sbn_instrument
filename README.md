@@ -9,3 +9,13 @@ To use the module:
 2. Add the path, e.g. `/opt/python_modules/`, to the `PYTHONPATH` environment variable.
 3. Now, it should be possible to import it.
 
+## Linux setup
+
+Add the user to the `dialout` group:
+
+    sudo usermod -a -G dialout $USER
+
+Udev rules to add specific USB devices to the `dialout` group (`/etc/udev/rules.d/99-sbn_instrument.rules`):
+
+    # Brymen BM869s
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0820", ATTR{idProduct}=="0001", MODE="0660", GROUP="dialout"

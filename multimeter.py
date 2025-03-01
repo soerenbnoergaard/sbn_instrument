@@ -292,3 +292,21 @@ class BrymenBm257s(Multimeter):
         flags = ()
 
         return value, unit, flags
+
+# TODO: Brymen BM869s:
+#
+# In [1]: import hid
+# In [2]: h = hid.device()
+# In [4]: h.open(0x0820, 0x0001)
+# In [5]: h.write(bytearray([0x00, 0x00, 0x86, 0x66]))
+# Out[5]: 4
+#
+# In [6]: h.read(512)
+# Out[6]: [0, 16, 16, 190, 191, 190, 190, 190]
+#
+# In [7]: h.read(512)
+# Out[7]: [1, 0, 0, 0, 0, 0, 0, 0]
+#
+# In [8]: h.read(512)
+# Out[8]: [134, 134, 134, 134, 0, 0, 0, 0]
+#
