@@ -175,10 +175,10 @@ class KoradKa3005Ps(PowerSupply):
         self._write("OUT0")
 
     def set_voltage_V(self, value):
-        self._write(f"VSET1:{value:05.2f}") 
+        self._write(f"VSET1:{value:05.2f}")
 
     def set_current_limit_A(self, value):
-        self._write(f"ISET1:{value:05.3f}") 
+        self._write(f"ISET1:{value:05.3f}")
         pass
 
     def measure_voltage_V(self):
