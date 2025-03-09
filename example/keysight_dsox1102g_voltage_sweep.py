@@ -87,13 +87,13 @@ def main():
     frequency_Hz = 300
     V_step_dB = 1
     V_start_dBV = -40
-    V_stop_dBV = -10
+    V_stop_dBV = 0
     set_generator_frequency_Hz(frequency_Hz)
 
     records = []
     voltage_dBV = V_start_dBV
 
-    while voltage_dBV < V_stop_dBV:
+    while voltage_dBV <= V_stop_dBV:
         set_generator_voltage_dBV(voltage_dBV)
         scope_autoscale(1)
         scope_autoscale(2)
