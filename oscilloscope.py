@@ -64,10 +64,10 @@ class RigolDs1104Z(Oscilloscope):
 class KeysightDsox1102G(Oscilloscope):
     """Keysight DSOX1102G oscilloscope with signal generator."""
 
-    def __init__(self, ip_address="", phy=None):
+    def __init__(self, device_address="", phy=None):
         self.phy = phy
         if self.phy is None:
-            self.phy = InstrumentUsbtmcLinux(ip_address)
+            self.phy = InstrumentUsbtmcLinux(device_address)
 
     def get_id(self):
         return self.phy.query("*IDN?")
