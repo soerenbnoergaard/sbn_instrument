@@ -1,3 +1,4 @@
+import os
 import socket
 import struct
 from abc import ABC, abstractmethod
@@ -201,6 +202,47 @@ class InstrumentVisa(Instrument):
     def write_binary_values(self, command, data, datatype="B"):
         self.inst.write_binary_values(command, data, datatype=datatype)
 
+class InstrumentUsbtmcLinux(Instrument):
+    def __init__(self, device_path):
+        self.h = os.open(device_path, os.O_RDWR)
+
+    def close(self):
+        os.close(self.h)
+
+    def write(self, s):
+        os.write(self.h, (str(s)+"\n").encode())
+
+    def set_timeout_s(self, value):
+        raise NotImplementedError
+
+    def read(self):
+        buf = []
+        while True:
+            b = os.read(self.h, 1).decode()
+            if b == "\n":
+                break
+            buf.append(b)
+        return "".join(buf)
+
+    def query(self, s):
+        self.write(s)
+        return self.read()
+
+    def reset(self):
+        self.write("*RST")
+
+    def query_binary_values(self, s, datatype="B"):
+        self.write(s)
+        H = os.read(self.h, 1).decode()
+        assert H == "#"
+        L = int(os.read(self.h, 1).decode())
+        N = int(os.read(self.h, L).decode())
+        B = os.read(self.h, N)
+        return [X[0] for X in struct.iter_unpack(datatype, B)]
+
+    def write_binary_values(self, command, data, datatype="B"):
+        raise NotImplementedError("Binary write not implemented yet.")
+
 class InstrumentDummy(Instrument):
     """Instrument dummy for simulation purposes."""
 
@@ -235,4 +277,3 @@ class InstrumentDummy(Instrument):
 
     def write_binary_values(self, command, data, datatype="B"):
         self.write_callback(command)
-

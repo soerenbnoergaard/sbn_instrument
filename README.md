@@ -19,3 +19,6 @@ Udev rules to add specific USB devices to the `dialout` group (`/etc/udev/rules.
 
     # Brymen BM869s
     SUBSYSTEM=="usb", ATTR{idVendor}=="0820", ATTR{idProduct}=="0001", MODE="0660", GROUP="dialout"
+
+    # Keysight DSOX1102G
+    SUBSYSTEM=="usb", ATTR{idVendor}=="2a8d", ATTR{idProduct}=="1797", MODE="0660", GROUP="dialout"
