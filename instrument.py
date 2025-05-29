@@ -237,7 +237,15 @@ class InstrumentUsbtmcLinux(Instrument):
         assert H == "#"
         L = int(os.read(self.h, 1).decode())
         N = int(os.read(self.h, L).decode())
-        B = os.read(self.h, N)
+        B = bytearray()
+        count = 0
+        chunk_size = 1024
+        while count < N:
+            sz = min(chunk_size, N-count)
+            b = os.read(self.h, sz)
+            B.extend(b)
+            count += len(b)
+        assert count == N, f"Incorrect data size: {count} != {N}"
         return [X[0] for X in struct.iter_unpack(datatype, B)]
 
     def write_binary_values(self, command, data, datatype="B"):
