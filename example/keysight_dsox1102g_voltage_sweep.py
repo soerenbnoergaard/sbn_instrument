@@ -1,4 +1,5 @@
 import time
+import sys
 from math import log10, sqrt
 import sbn_instrument
 
@@ -9,6 +10,8 @@ channel 1 and output on channel 2.
 """
 
 filelabel = time.strftime("%Y-%m-%d_%H%M%S") + "_voltage_sweep"
+if len(sys.argv) >= 2:
+    filelabel += "_" + sys.argv[1]
 output = sbn_instrument.CsvWriter(filelabel + ".csv")
 scope = sbn_instrument.oscilloscope.KeysightDsox1102G("/dev/usbtmc0")
 
@@ -30,21 +33,34 @@ def scope_scale_next(channel, up=True):
     scales = scope_get_available_scales()
     n = argnearest(scale, scales)
     if up:
-        scope_write(f"CHANNEL{channel}:SCALE {scales[n+1]}")
+        n_new = n + 1
+        if n_new > len(scales):
+            raise IndexError
     else:
-        scope_write(f"CHANNEL{channel}:SCALE {scales[n-1]}")
+        n_new = n - 1
+        if n_new < 0:
+            raise IndexError
+    scope_write(f"CHANNEL{channel}:SCALE {scales[n_new]}")
+    scale_new = float(scope_query(f"CHANNEL{channel}:SCALE?"))
+    if scale_new == scale:
+        raise ValueError
 
 def scope_autoscale(channel=1):
     V_min = float(scope_query(f":MEASURE:VMIN? CHAN{channel}"))
     V_max = float(scope_query(f":MEASURE:VMAX? CHAN{channel}"))
     V_scale = float(scope_query(f"CHANNEL{channel}:SCALE?"))
 
-    if V_min < -3.5*V_scale or V_max > 3.5*V_scale:
-        scope_scale_next(channel, up=True)
-        scope_autoscale(channel)
-    if V_min > -1*V_scale or V_max < 1*V_scale:
-        scope_scale_next(channel, up=False)
-        scope_autoscale(channel)
+    try:
+        if V_min < -3.5*V_scale or V_max > 3.5*V_scale:
+            scope_scale_next(channel, up=True)
+            scope_autoscale(channel)
+        if V_min > -1*V_scale or V_max < 1*V_scale:
+            scope_scale_next(channel, up=False)
+            scope_autoscale(channel)
+    except IndexError:
+        pass
+    except ValueError:
+        pass
 
 def scope_measure():
     input_Vrms = float(scope_query(":MEASURE:VRMS? CHAN1"))
@@ -86,7 +102,7 @@ def main():
     print(scope.get_id())
     frequency_Hz = 300
     V_step_dB = 1
-    V_start_dBV = -40
+    V_start_dBV = -60
     V_stop_dBV = 0
     set_generator_frequency_Hz(frequency_Hz)
 
@@ -113,3 +129,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
