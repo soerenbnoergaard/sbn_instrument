@@ -70,7 +70,7 @@ class KeysightDsox1102G(Oscilloscope):
             self.phy = InstrumentUsbtmcLinux(device_address)
 
     def get_id(self):
-        return self.phy.query("*IDN?")
+        return self.phy.query("*IDN?").strip()
 
     def reset(self):
         self.phy.write("*RST")
@@ -82,3 +82,4 @@ class KeysightDsox1102G(Oscilloscope):
         data = bytearray(self.phy.query_binary_values(":DISPLAY:DATA? PNG, COLOR", datatype="B"))
         with open(filename, "wb") as f:
             f.write(data)
+
